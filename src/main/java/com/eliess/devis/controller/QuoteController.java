@@ -5,8 +5,11 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.eliess.devis.dto.QuoteDTO;
+import com.eliess.devis.entity.Client;
 import com.eliess.devis.entity.Quote;
 import com.eliess.devis.entity.QuoteLine;
+import com.eliess.devis.repository.ClientRepository;
 import com.eliess.devis.repository.QuoteLineRepository;
 import com.eliess.devis.repository.QuoteRepository;
 
@@ -16,18 +19,35 @@ public class QuoteController {
 
     private final QuoteRepository quoteRepository;
     private final QuoteLineRepository quoteLineRepository;
+    private final ClientRepository clientRepository;
 
     public QuoteController(
             QuoteRepository quoteRepository,
-            QuoteLineRepository quoteLineRepository
+            QuoteLineRepository quoteLineRepository,
+            ClientRepository clientRepository
     ) {
         this.quoteRepository = quoteRepository;
         this.quoteLineRepository = quoteLineRepository;
+        this.clientRepository = clientRepository;
     }
 
     @GetMapping
-    public ResponseEntity<List<Quote>> getAllQuotes() {
-        return ResponseEntity.ok(quoteRepository.findAll());
+    public ResponseEntity<List<QuoteDTO>> getAllQuotes() {
+        List<Quote> quotes = quoteRepository.findAll();
+        List<QuoteDTO> dtos = quotes.stream()
+            .map(quote -> {
+                Client client = clientRepository.findById(quote.getClientId())
+                    .orElse(null);
+                String clientName = client != null ? client.getName() : "Inconnu";
+                return new QuoteDTO(
+                    quote.getId(),
+                    clientName,
+                    quote.getStatus(),
+                    quote.getCreatedAt()
+                );
+            })
+            .toList();
+        return ResponseEntity.ok(dtos);
     }
 
     @GetMapping("/{id}")
