@@ -66,6 +66,7 @@ public class QuoteController {
         return ResponseEntity.status(201).body(saved);
     }
 
+    // QuoteLine
     @PostMapping("/{id}/lines")
     public ResponseEntity<QuoteLine> addLineToQuote(
             @PathVariable Long id,
@@ -80,6 +81,50 @@ public class QuoteController {
         QuoteLine saved = quoteLineRepository.save(quoteLine);
 
         return ResponseEntity.status(201).body(saved);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Quote> updateQuote(
+            @PathVariable Long id,
+            @RequestBody Quote updatedQuote
+    ) {
+
+        return quoteRepository.findById(id)
+                .map(quote -> {
+
+                    quote.setStatus(updatedQuote.getStatus());
+
+                    Quote saved = quoteRepository.save(quote);
+
+                    return ResponseEntity.ok(saved);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteQuote(@PathVariable Long id) {
+
+        quoteRepository.deleteById(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    // QuoteLine
+    @GetMapping("/{id}/lines")
+    public ResponseEntity<List<QuoteLine>> getQuoteLines(
+        @PathVariable Long id) {
+        return ResponseEntity.ok(
+            quoteLineRepository.findByQuoteId(id)
+        );
+    }
+
+    // QuoteLine
+    @DeleteMapping("/{id}/lines/{lineId}")
+    public ResponseEntity<Void> deleteQuoteLine(
+        @PathVariable Long id,
+        @PathVariable Long lineId) {
+        quoteLineRepository.deleteById(lineId);
+        return ResponseEntity.noContent().build();
     }
 
 }
